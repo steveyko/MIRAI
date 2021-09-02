@@ -107,7 +107,7 @@ impl<'block, 'analysis, 'compilation, 'tcx> BlockVisitor<'block, 'analysis, 'com
     /// Calls a specialized visitor for each kind of statement.
     #[logfn_inputs(DEBUG)]
     fn visit_statement(&mut self, location: mir::Location, statement: &mir::Statement<'tcx>) {
-        debug!("env {:?}", self.bv.current_environment);
+        warn!("{:?}", statement);
         self.bv.current_location = location;
         let mir::Statement { kind, source_info } = statement;
         self.bv.current_span = source_info.span;
@@ -137,6 +137,7 @@ impl<'block, 'analysis, 'compilation, 'tcx> BlockVisitor<'block, 'analysis, 'com
     #[logfn_inputs(TRACE)]
     fn visit_assign(&mut self, place: &mir::Place<'tcx>, rvalue: &mir::Rvalue<'tcx>) {
         let mut path = self.visit_lh_place(place);
+
         match &path.value {
             PathEnum::PhantomData => {
                 // No need to track this data
@@ -149,7 +150,10 @@ impl<'block, 'analysis, 'compilation, 'tcx> BlockVisitor<'block, 'analysis, 'com
             }
             _ => {}
         }
+
         self.visit_rvalue(path, rvalue);
+
+        super::sbc::check_assign(self, place, rvalue);
     }
 
     /// Denotes a call to the intrinsic function copy_overlapping, where `src` and `dst` denotes the
@@ -1775,6 +1779,23 @@ impl<'block, 'analysis, 'compilation, 'tcx> BlockVisitor<'block, 'analysis, 'com
                 }
             }
             PathEnum::HeapBlock { value } => value.clone(),
+            //// steveyko
+            //PathEnum::LocalVariable { .. } => {
+            //    match target_type.kind() {
+            //        TyKind::Ref(_, _, rustc_hir::Mutability::Mut) => {
+            //            self.bv
+            //                .current_environment
+            //                .update_status_at(value_path.clone(), super::sbc::Status::Mutable);
+            //        }
+            //        TyKind::Ref(_, _, rustc_hir::Mutability::Not) => {
+            //            self.bv
+            //                .current_environment
+            //                .update_status_at(value_path.clone(), super::sbc::Status::Aliased);
+            //        }
+            //        _ => (),
+            //    }
+            //    AbstractValue::make_reference(value_path.clone())
+            //}
             _ => AbstractValue::make_reference(value_path.clone()),
         };
         self.bv.update_value_at(path, value);

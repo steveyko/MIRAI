@@ -93,6 +93,7 @@ impl<'fixed, 'analysis, 'compilation, 'tcx>
     /// current_environment of the block. Also adds the block to the already_visited set.
     #[logfn_inputs(TRACE)]
     fn visit_basic_block(&mut self, bb: mir::BasicBlock, iteration_count: usize) {
+        warn!("bb: {:?}", bb);
         // Merge output states of predecessors of bb
         let mut i_state = if iteration_count == 0 && bb.index() == 0 {
             self.bv.first_environment.clone()

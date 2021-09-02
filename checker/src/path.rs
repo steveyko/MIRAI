@@ -182,27 +182,55 @@ pub enum PathEnum {
 impl Debug for PathEnum {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            PathEnum::Computed { value } => value.fmt(f),
-            PathEnum::HeapBlock { value } => f.write_fmt(format_args!("<{:?}>", value)),
+            PathEnum::Computed { value } => {
+                info!("PathEnum::Computed");
+                value.fmt(f)
+            }
+            PathEnum::HeapBlock { value } => {
+                info!("PathEnum::HeapBlock");
+                f.write_fmt(format_args!("<{:?}>", value))
+            }
             PathEnum::LocalVariable {
                 ordinal,
                 type_index,
-            } => f.write_fmt(format_args!("local_{}({})", ordinal, type_index)),
-            PathEnum::Offset { value } => f.write_fmt(format_args!("<{:?}>", value)),
-            PathEnum::Parameter { ordinal } => f.write_fmt(format_args!("param_{}", ordinal)),
-            PathEnum::Result => f.write_str("result"),
+            } => {
+                info!("PathEnum::LocalVariable");
+                f.write_fmt(format_args!("local_{}({})", ordinal, type_index))
+            }
+            PathEnum::Offset { value } => {
+                info!("PathEnum::Offset");
+                f.write_fmt(format_args!("<{:?}>", value))
+            }
+            PathEnum::Parameter { ordinal } => {
+                info!("PathEnum::Parameter");
+                f.write_fmt(format_args!("param_{}", ordinal))
+            }
+            PathEnum::Result => {
+                info!("PathEnum::Result");
+                f.write_str("result")
+            }
             PathEnum::StaticVariable {
                 summary_cache_key, ..
-            } => summary_cache_key.fmt(f),
-            PathEnum::PhantomData => f.write_str("phantom_data"),
+            } => {
+                info!("PathEnum::StaticVariable");
+                summary_cache_key.fmt(f)
+            }
+            PathEnum::PhantomData => {
+                info!("PathEnum::PhantomData");
+                f.write_str("phantom_data")
+            }
             PathEnum::PromotedConstant { ordinal } => {
+                info!("PathEnum::PromotedConstant");
                 f.write_fmt(format_args!("constant_{}", ordinal))
             }
             PathEnum::QualifiedPath {
                 qualifier,
                 selector,
                 ..
-            } => f.write_fmt(format_args!("{:?}.{:?}", qualifier, selector)),
+            } => {
+                info!("PathEnum::QualifiedPath");
+                f.write_fmt(format_args!("{:?}.{:?}", qualifier, selector))
+            }
         }
     }
 }

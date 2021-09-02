@@ -84,6 +84,7 @@ pub mod k_limits;
 pub mod known_names;
 pub mod options;
 pub mod path;
+pub mod sbc; // steveyko
 pub mod smt_solver;
 pub mod summaries;
 pub mod tag_domain;

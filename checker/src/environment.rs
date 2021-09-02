@@ -8,6 +8,7 @@ use crate::abstract_value::AbstractValue;
 use crate::abstract_value::AbstractValueTrait;
 use crate::expression::Expression;
 use crate::path::{Path, PathEnum, PathSelector};
+use crate::sbc::Status; // steveyko
 
 use crate::constant_domain::ConstantDomain;
 use log_derive::{logfn, logfn_inputs};
@@ -25,6 +26,8 @@ pub struct Environment {
     pub exit_conditions: HashTrieMap<BasicBlock, Rc<AbstractValue>>,
     /// Does not include any entries where the value is abstract_value::Bottom
     pub value_map: HashTrieMap<Rc<Path>, Rc<AbstractValue>>,
+    // steveyko
+    pub borrow_map: HashTrieMap<Rc<Path>, Vec<Status>>,
 }
 
 /// Default
@@ -35,6 +38,7 @@ impl Environment {
             entry_condition: Rc::new(abstract_value::TRUE),
             exit_conditions: HashTrieMap::default(),
             value_map: HashTrieMap::default(),
+            borrow_map: HashTrieMap::default(), // steveyko
         }
     }
 }
@@ -287,6 +291,21 @@ impl Environment {
                 }
             }
         }
+    }
+
+    // steveyko
+    #[logfn_inputs(TRACE)]
+    pub fn status_at(&mut self, path: &Rc<Path>) -> Option<&mut Vec<Status>> {
+        self.borrow_map.get_mut(path)
+    }
+
+    // steveyko
+    #[logfn_inputs(TRACE)]
+    pub fn update_status_at(&mut self, path: Rc<Path>, status: Status) {
+        match self.status_at(&path) {
+            Some(status_vec) => status_vec.push(status),
+            None => self.borrow_map.insert_mut(path, vec![status]),
+        };
     }
 
     /// If the path contains an abstract value that was constructed with a conditional, the path is
@@ -563,6 +582,7 @@ impl Environment {
             }
         }
         Environment {
+            borrow_map: HashTrieMap::default(), // steveyko: TODO
             value_map,
             entry_condition: abstract_value::TRUE.into(),
             exit_conditions: HashTrieMap::default(),
